@@ -9,19 +9,23 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
 const Nota = ({
-  note,
+  note: {
+    noteId,
+    noteContent,
+  },
+  removeNote,
 }) => (
   <Grid item xs={6}>
     <Card>
       <CardActionArea>
         <CardContent>
           <Typography variant="body2" color="textSecondary" component="p">
-            {note.contenidoNota}
+            {noteContent}
           </Typography>
         </CardContent>
       </CardActionArea>
       <CardActions>
-        <Button size="small" color="primary">
+        <Button onClick={() => removeNote(noteId)} size="small" color="primary">
           Eliminar
         </Button>
       </CardActions>
@@ -31,9 +35,10 @@ const Nota = ({
 
 Nota.propTypes = {
   note: PropTypes.shape({
-    idNota: PropTypes.number.isRequired,
-    contenidoNota: PropTypes.string.isRequired,
+    noteId: PropTypes.string.isRequired,
+    noteContent: PropTypes.string.isRequired,
   }).isRequired,
+  removeNote: PropTypes.func.isRequired,
 };
 
 export default Nota;
