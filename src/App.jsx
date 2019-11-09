@@ -1,69 +1,66 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import firebase from 'firebase';
 import './App.css';
 import NotasContainer from './components/NotasContainer';
 import firebaseConfig from './config/config';
 
-class App extends Component {
-  // const app = !firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app();
-  // const dbFirebase = app.database().ref().child('notes');
-  // const [notes, setNotes] = useState([]);
+const App = () => {
+  const app = !firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app();
+  const dbFirebase = app.database().ref().child('notes');
+  const [notes, setNotes] = useState([]);
 
-  // useEffect(() => {
-  //   const notas = [];
-  //   dbFirebase.on('child_added', (snap) => {
-  //     notas.push({
-  //       noteId: snap.key,
-  //       noteContent: snap.val().noteContent,
-  //     });
-  //     setNotes(notas);
-  //   });
-  // }, []);
-  constructor() {
-    super();
-    this.addNote = this.addNote.bind(this);
-    this.removeNote = this.removeNote.bind(this);
-    this.app = !firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app();
-    this.dbFirebase = this.app.database().ref().child('notes');
-    this.state = {
-      notes: [],
-    };
-  }
-
-  componentDidMount() {
-    const { notes } = this.state;
-    this.dbFirebase.on('child_added', (snap) => {
-      notes.push({
-        noteId: snap.key,
-        noteContent: snap.val().noteContent,
-      });
-      // setNotes(notes);
-      this.setState(notes);
+  useEffect(() => {
+    let notas = notes;
+    dbFirebase.on('child_added', (snap) => {
+      notas = [
+        ...notas,
+        {
+          noteId: snap.key,
+          noteContent: snap.val().noteContent,
+        },
+      ];
+      setNotes(notas);
     });
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  addNote(noteContent) {
-    this.dbFirebase.push().set({ noteContent });
-  }
+  useEffect(() => {
+    dbFirebase.on('child_removed', (snap) => {
+      const notees = [];
+      const notas = notes;
 
-  removeNote(idNote) {
-    this.dbFirebase.child(idNote).remove();
-  }
+      notas.forEach((nota, index) => {
+        if (nota.noteId === snap.key) {
+          notas.splice(index, 1);
+        }
+      });
 
-  render() {
-    const { notes } = this.state;
-    return (
-      <div className="App">
-        <header className="App-header">
-          <h1>Firenotes</h1>
-          <p>
-            Administra notas facilmente con ReactJS y Firebase
-          </p>
-        </header>
-        <NotasContainer notes={notes} addNote={this.addNote} removeNote={this.removeNote} />
-      </div>
-    );
-  }
-}
+      notas.forEach((nota) => {
+        notees.push(nota);
+      });
+      setNotes(notees);
+    });
+  }, [dbFirebase, notes]);
+
+  const addNote = (noteContent) => {
+    dbFirebase.push().set({ noteContent });
+  };
+
+  const removeNote = (idNote) => {
+    dbFirebase.child(idNote).remove();
+  };
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>Firenotes</h1>
+        <p>
+          Administra notas facilmente con ReactJS y Firebase
+        </p>
+      </header>
+      <NotasContainer notes={notes} addNote={addNote} removeNote={removeNote} />
+    </div>
+  );
+};
 
 export default App;
